@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Task Tracker{% endblock %}</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Changa:wght@300;400;600&family=Passion+One:wght@400;700&display=swap" rel="stylesheet">
+
+
+    {% block head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+    {% if current_user %}
+    <a href="{{ url_for('routes.index') }}" class="global-logo">
+        🐰 <span>TaskTracker</span>
+    </a>
+    {% endif %}
+    <div class="app-wrapper">
+
+    <nav id="nav">
+
+    <a href="{{ url_for('routes.index') }}" class="nav-item">
+        <i data-lucide="home"></i>
+        <span class="text">Home</span>
+    </a>
+
+    <a href="{{ url_for('routes.about') }}" class="nav-item">
+       <i data-lucide="sparkles"></i>
+        <span class="text">About</span>
+    </a>
+
+    <a href="{{ url_for('routes.team') }}" class="nav-item">
+    <i data-lucide="users"></i>
+    <span class="text">Team</span>
+</a>
+</nav>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer id="footer">
+    <p id="footer-text"></p>
+</footer>
+    </div>
+    {% block scripts %}{% endblock %}
+
+    <script>
+    lucide.createIcons();
+</script>
+
+<script>
+const messages = [
+    "🐰 Bunny Tracker Inc 2026",
+    "Hopping through your tasks 🐾",
+    "Stay organised effortlessly ✨",
+    "Never miss a deadline ⏰"
+];
+
+let messageIndex = 0;
+let charIndex = 0;
+
+const speed = 50;     // typing speed
+const pause = 1800;   // pause before switching
+
+function typeMessage() {
+    const el = document.getElementById("footer-text");
+    if (!el) return;
+
+    const currentMessage = messages[messageIndex];
+
+    if (charIndex < currentMessage.length) {
+        el.textContent += currentMessage.charAt(charIndex++);
+        setTimeout(typeMessage, speed);
+    } else {
+        setTimeout(() => {
+            // move to next message
+            messageIndex = (messageIndex + 1) % messages.length;
+            charIndex = 0;
+            el.textContent = "";
+            typeMessage();
+        }, pause);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", typeMessage);
+</script>
+
+</body>
+</html>

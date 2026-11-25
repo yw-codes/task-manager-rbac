@@ -1,0 +1,297 @@
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+/* GREEN MOVING BACKGROUND */
+
+body.about-page {
+    font-family: 'Changa', sans-serif;
+    min-height:100vh;
+
+    background: linear-gradient(
+        135deg,
+        #a8e063,
+        #56ab2f,
+        #3ca55c,
+        #a8e063
+    );
+
+    background-size:400% 400%;
+    animation: gradientMove 18s ease infinite;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+/* BACKGROUND MOTION */
+
+
+/* CENTER MODAL */
+
+.about-modal{
+    position:relative;
+
+    width:800px;
+
+    padding-inline-start:40px;
+    padding-block: 40px;
+
+    text-align:center;
+
+    background: rgba(255,255,255,0.25);
+    backdrop-filter: blur(12px);
+
+    border-radius:20px;
+
+    border:1px solid rgba(255,255,255,0.3);
+
+    box-shadow:0 15px 40px rgba(0,0,0,0.25);
+
+    animation: floatCard 6s ease-in-out infinite;
+}
+
+
+/* FLOATING EFFECT */
+
+@keyframes floatCard{
+    0%{ transform:translateY(0px); }
+    50%{ transform:translateY(-8px); }
+    100%{ transform:translateY(0px); }
+}
+
+
+/* TEXT */
+
+.about-modal h1{
+    font-weight:600;
+    margin-bottom:15px;
+    color:#1e4d2b;
+}
+
+.about-modal p{
+    margin-bottom:10px;
+    line-height:1.6;
+    font-weight: 400;
+    color:#1e4d2b;
+}
+
+
+.modal-content{
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+/* Chrome / Edge / Safari */
+.modal-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+    background: rgba(255,255,255,0.2);
+    border-radius: 10px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+    background: linear-gradient(
+        135deg,
+        #56ab2f,
+        #3ca55c
+    );
+    border-radius: 10px;
+}
+
+/* Hover effect */
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(
+        135deg,
+        #3ca55c,
+        #2ecc71
+    );
+}
+
+/* Firefox */
+.modal-content {
+    scrollbar-width: thin;
+    scrollbar-color: #56ab2f rgba(255,255,255,0.2);
+}
+
+
+/* BUTTON */
+
+.back-button{
+    display:inline-block;
+    margin-top:10px;
+
+    padding:10px 18px;
+
+    background:#2ecc71;
+    color:white;
+
+    text-decoration:none;
+    border-radius:8px;
+
+    font-weight:600;
+
+    transition:all .25s ease;
+}
+
+.back-button:hover{
+    transform:translateY(-2px);
+    box-shadow:0 6px 14px rgba(0,0,0,0.25);
+}
+
+
+/* BUSHES */
+/* CARTOON BUSH BASE */
+
+.bush{
+    position:absolute;
+    width:90px;
+    height:60px;
+
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+     z-index:2;
+
+    animation:bushWiggle 3s ease-in-out infinite;
+}
+
+/* POSITIONING */
+
+.bush-left{
+    bottom:-20px;
+    left:-30px;
+}
+
+.bush-right{
+    top:-20px;
+    right:-30px;
+}
+
+/* LEAVES (cartoon blobs) */
+
+.leaf{
+    position:absolute;
+    width:40px;
+    height:40px;
+
+    background:#2ecc71;
+
+    border-radius:50%;
+
+    box-shadow:
+        inset -4px -4px 0 rgba(0,0,0,0.15);
+}
+
+/* different positions */
+
+.leaf:nth-child(1){
+    left:0;
+    bottom:0;
+}
+
+.leaf:nth-child(2){
+    left:25px;
+    bottom:10px;
+}
+
+.leaf:nth-child(3){
+    left:50px;
+    bottom:0;
+}
+
+/* WIND WIGGLE */
+
+@keyframes bushWiggle{
+    0%{ transform:rotate(0deg); }
+    50%{ transform:rotate(4deg); }
+    100%{ transform:rotate(0deg); }
+}
+
+.bush:hover {
+    animation: bushShake 0.4s ease-in-out infinite;
+    cursor: pointer;
+}
+
+@keyframes bushShake {
+    0% { transform: rotate(0deg); }
+    25% { transform: rotate(8deg); }
+    50% { transform: rotate(-8deg); }
+    75% { transform: rotate(5deg); }
+    100% { transform: rotate(0deg); }
+}
+
+.bush:hover .leaf {
+    transform: scale(1.2);
+    transition: transform 0.2s ease;
+}
+
+.bunny-pop{
+    position:absolute;
+    font-size:38px;
+
+    opacity:0.9;
+
+    transform: translateY(15px);
+
+    transition:
+        transform 0.35s ease,
+        opacity 0.25s ease;
+
+    z-index:1;   /* behind bush */
+}
+
+/* bunny pops when bush is hovered */
+.bush:hover + .bunny-pop{
+    transform: translateY(-3px);
+}
+
+/* left bunny */
+.bunny-left{
+    bottom:0px;
+    left:10px;
+}
+
+.bunny-right{
+    top:-50px;
+    right:10px;
+}
+
+.bush:hover + .bunny-pop{
+    transform: translateY(-1px);
+}
+
+.leaf-particle{
+    position:absolute;
+    font-size:20px;
+    opacity:0;
+}
+
+.bush:hover .leaf-particle{
+    animation: leafFly 1s ease infinite;
+}
+
+@keyframes leafFly{
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity:1;
+    }
+
+    100% {
+        transform: translateY(60px) rotate(40deg);
+        opacity:0;
+    }
+}
+
+@keyframes bunnyHop{
+    0%   { transform: translateY(0px) scale(0.8); }
+    40%  { transform: translateY(-18px) scale(1.05); }
+    70%  { transform: translateY(-8px) scale(0.98); }
+    100% { transform: translateY(-10px) scale(1); }
+}
+
+

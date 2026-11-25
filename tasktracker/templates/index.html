@@ -1,0 +1,845 @@
+{% extends "base.html" %}
+{% block body_class %}home-page{% endblock %}
+
+{% block title %}Home - Task Tracker{% endblock %}
+
+{% block head %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="main-container">
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div id="flash-messages">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} {{ 'alert-error' if category == 'error' else 'alert-success' }}" style="padding: 10px; margin-bottom: 20px; border-radius: 8px;">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <div id="user-status-bar" class="user-status-bar {{ 'hidden' if not current_user else '' }}">
+        Welcome, <span class="username-highlight">{{ current_user }}</span> | 
+        <a href="{{ url_for('routes.logout') }}" class="status-bar-link">Logout</a>
+    </div>
+
+
+    {% if not current_user %}
+    <div id="login-overlay" class="modal-overlay">
+        <div class="modal-card">
+            <h2>Member Login</h2>
+            <input type="text" id="login-username" placeholder="Username">
+            <input type="password" id="login-password" placeholder="Password">
+            <p id="login-error" style="color: #e74c3c; font-size: 14px; display: none;"></p>
+            <button onclick="handleLogin()" class="save-btn">Login</button>
+            <p style="text-align: center; margin-top: 15px; font-size: 14px;">
+                Don't have an account? 
+                <a href="#" onclick="showRegisterModal()" style="color: #3498db; text-decoration: none;">Register here</a>
+            </p>
+        </div>
+    </div>
+
+    <div id="register-overlay" class="modal-overlay" style="display: none;">
+        <div class="modal-card">
+            <h2>Create Account</h2>
+            <input type="text" id="register-username" placeholder="Username">
+            <input type="password" id="register-password" placeholder="Password">
+            <input type="text" id="register-nickname" placeholder="Display Name">
+            <p id="register-error" style="color: #e74c3c; font-size: 14px; display: none;"></p>
+            <p id="register-success" style="color: #2ecc71; font-size: 14px; display: none;"></p>
+            <button onclick="handleRegister()" class="save-btn">Register</button>
+            <p style="text-align: center; margin-top: 15px; font-size: 14px;">
+                Already have an account? 
+                <a href="#" onclick="showLoginModal()" style="color: #3498db; text-decoration: none;">Login here</a>
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    <div id="bulk-bar">
+    <div class="bulk-content">
+        <span id="selected-count">0 selected</span>
+
+        <div class="bulk-actions">
+            <button id="delete-selected-btn" class="icon-btn" title="Delete selected">
+                🗑️
+            </button>
+
+            <button class="cancel-btn" onclick="exitSelectionMode()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+    <div class="search-controls">
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="Search tasks by name or description..." class="search-input">
+            <button id="search-button" class="search-btn" onclick="performSearch()">
+                🔍
+            </button>
+            <button id="clear-search-button" class="clear-search-btn" onclick="clearSearch()" style="display: none;">
+                Clear
+            </button>
+        </div>
+    </div>
+
+    <div class="sort-controls">
+        <button id="sort-toggle" class="sort-btn" onclick="toggleSortOrder()">
+            ⏰ Sort: Soonest First
+        </button>
+    </div>
+
+<!-- Toggle Button -->
+
+{% if current_user %}
+<button class="filter-toggle" onclick="openDrawer()">
+    ⚙ <span id="filter-count" class="filter-count"></span>
+</button>
+
+<!-- Overlay -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+
+<!-- Drawer -->
+<div class="filter-drawer" id="filterDrawer">
+    <div class="drawer-header">
+
+    <h3>Filters</h3>
+        <button class="close-btn" onclick="closeDrawer()">✕</button>
+        </div>
+
+
+    <div class="filter-section">
+        <p>Status</p>
+        <label><input type="radio" name="status" value="all" checked> All</label>
+        <label><input type="radio" name="status" value="pending"> Pending</label>
+        <label><input type="radio" name="status" value="completed"> Completed</label>
+    </div>
+
+    <div class="filter-section">
+        <p>Date</p>
+        <label><input type="radio" name="date" value="all" checked> All</label>
+        <label><input type="radio" name="date" value="today"> Today</label>
+        <label><input type="radio" name="date" value="week"> This Week</label>
+    </div>
+
+</div>
+{% endif %}
+
+    <div id="task-list" class="task-list-container">
+        </div>
+
+    <button class="add-task-button" onclick="openModal()">Add a Task</button>
+
+    <div id="modal-overlay" class="hidden" onclick="closeModalOutside(event)">
+        <div class="modal-card" onclick="event.stopPropagation()"> 
+            <h2>New Task</h2>
+            <input type="text" id="task-input" placeholder="Task Title">
+
+            <label for="deadline-input" style="display:block; text-align:left; font-size:12px; margin:10px 0 5px 5px; color:#666;">Set Deadline:</label>
+            <input type="datetime-local" id="deadline-input" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 10px;">
+            
+            <textarea id="description-input" placeholder="Task Description" style="width: 100%; margin-top: 10px; border-radius: 8px; border: 1px solid #ddd; padding: 10px; min-height: 80px;"></textarea>
+            
+            <p id="error-message" style="color: #e74c3c; font-size: 14px; display: none; margin: 5px 0;">Title is required!</p>
+            
+            <button onclick="saveTask()" class="save-btn">Save Task</button>
+            <button onclick="closeModal()" class="closebtn">Close</button>
+        </div>
+    </div>
+
+    <button id="scrollTopBtn" class="scroll-top-btn">
+    <i data-lucide="arrow-up"></i>
+</button>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let tasks = [];
+let editingTaskId = null;
+let selectionMode = false;
+let selectedTaskIds = new Set();
+let currentSortOrder = "asc"; // "asc" or "desc"
+let currentSearchTerm = ""; // current search term, empty means not searching
+
+let statusFilter = "all"; // all, completed, pending
+let dateFilter = "all";   // all, today, week
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadTasks();
+updateFilterCount();
+});
+
+async function handleLogin() {
+    const user = document.getElementById('login-username').value;
+    const pass = document.getElementById('login-password').value;
+    try {
+        const response = await fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: user, password: pass })
+        });
+        const result = await response.json();
+        if (result.success) {
+            window.location.reload(); 
+        } else {
+            const errorMsg = document.getElementById('login-error');
+            errorMsg.style.display = "block";
+            errorMsg.innerText = result.message;
+        }
+    } catch (e) { console.error(e); }
+}
+
+function showRegisterModal() {
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('register-overlay').style.display = 'flex';
+    // Clear login form
+    document.getElementById('login-username').value = '';
+    document.getElementById('login-password').value = '';
+    document.getElementById('login-error').style.display = 'none';
+}
+
+function showLoginModal() {
+    document.getElementById('register-overlay').style.display = 'none';
+    document.getElementById('login-overlay').style.display = 'flex';
+    // Clear register form
+    document.getElementById('register-username').value = '';
+    document.getElementById('register-password').value = '';
+    document.getElementById('register-nickname').value = '';
+    document.getElementById('register-error').style.display = 'none';
+    document.getElementById('register-success').style.display = 'none';
+}
+
+async function handleRegister() {
+    const username = document.getElementById('register-username').value;
+    const password = document.getElementById('register-password').value;
+    const nickname = document.getElementById('register-nickname').value;
+    
+    // Clear previous messages
+    document.getElementById('register-error').style.display = 'none';
+    document.getElementById('register-success').style.display = 'none';
+    
+    try {
+        const response = await fetch('/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: username, password: password, nickname: nickname })
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            const successMsg = document.getElementById('register-success');
+            successMsg.style.display = "block";
+            successMsg.innerText = result.message + " You can now login!";
+            
+            // Clear form
+            document.getElementById('register-username').value = '';
+            document.getElementById('register-password').value = '';
+            document.getElementById('register-nickname').value = '';
+            
+            // Optionally switch to login modal after a delay
+            setTimeout(() => {
+                showLoginModal();
+            }, 2000);
+        } else {
+            const errorMsg = document.getElementById('register-error');
+            errorMsg.style.display = "block";
+            errorMsg.innerText = result.message;
+        }
+    } catch (e) { 
+        console.error(e);
+        const errorMsg = document.getElementById('register-error');
+        errorMsg.style.display = "block";
+        errorMsg.innerText = "Registration failed. Please try again.";
+    }
+}
+
+async function loadTasks() {
+    try {
+        let url;
+        if (currentSearchTerm) {
+            // Search state - call search API
+            url = `/api/tasks/search?q=${encodeURIComponent(currentSearchTerm)}&sort=${currentSortOrder}`;
+        } else {
+            // Normal state - call tasks API
+            url = `/api/tasks?sort=${currentSortOrder}`;
+        }
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        tasks = data.tasks || [];
+        renderTaskList();
+    } catch (error) {
+        console.error('Error loading tasks:', error);
+    }
+}
+
+
+async function loadTasksWithSort(sortOrder) {
+    try {
+        let url;
+        if (currentSearchTerm) {
+            // Search state - call search API with new sort order
+            url = `/api/tasks/search?q=${encodeURIComponent(currentSearchTerm)}&sort=${sortOrder}`;
+        } else {
+            // Normal state - call tasks API with new sort order
+            url = `/api/tasks?sort=${sortOrder}`;
+        }
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        tasks = data.tasks || [];
+        renderTaskList();
+    } catch (error) {
+        console.error('Error loading tasks:', error);
+    }
+}
+
+async function searchTasks(searchTerm) {
+    try {
+        // Update current search term
+        currentSearchTerm = searchTerm;
+        
+        const response = await fetch(`/api/tasks/search?q=${encodeURIComponent(searchTerm)}&sort=${currentSortOrder}`);
+        const data = await response.json();
+        tasks = data.tasks || [];
+        renderTaskList();
+        
+        // Show clear search button
+        const clearBtn = document.getElementById('clear-search-button');
+        clearBtn.style.display = 'inline-block';
+        
+        // Update search input to match current search term
+        document.getElementById('search-input').value = searchTerm;
+    } catch (error) {
+        console.error('Error searching tasks:', error);
+    }
+}
+
+async function performSearch() {
+    const searchInput = document.getElementById('search-input');
+    const searchTerm = searchInput.value.trim();
+    
+    if (searchTerm) {
+        // Set current search term and load tasks
+        currentSearchTerm = searchTerm;
+        await loadTasks();
+    } else {
+        // If search term is empty, clear search
+        await clearSearch();
+    }
+}
+
+async function clearSearch() {
+    const searchInput = document.getElementById('search-input');
+    searchInput.value = '';
+    
+    const clearBtn = document.getElementById('clear-search-button');
+    clearBtn.style.display = 'none';
+    
+    // Clear current search term and load all tasks
+    currentSearchTerm = '';
+
+    // RESET FILTER STATE
+    statusFilter = "all";
+    dateFilter = "all";
+
+    updateFilterCount();
+    
+
+    // RESET RADIO BUTTON UI
+    document.querySelector('input[name="status"][value="all"]').checked = true;
+    document.querySelector('input[name="date"][value="all"]').checked = true;
+    
+    await loadTasks();
+    closeDrawer();
+}
+
+// Add event listener for Enter key in search input
+document.addEventListener('DOMContentLoaded', function() {
+    loadTasks();
+    
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+    }
+});
+
+function renderTaskList() {
+    const taskList = document.getElementById('task-list');
+    const sortControls = document.querySelector('.sort-controls');
+    const searchControls = document.querySelector('.search-controls');
+    
+    if (!taskList) return;
+    taskList.innerHTML = '';
+    
+    // Show/hide sort button based on task count AND search state
+    if (sortControls) {
+        if (currentSearchTerm === "" && tasks.length === 0) {
+            // Not searching and no tasks - hide sort controls
+            sortControls.classList.add('no-display');
+        } else {
+            // Either searching or has tasks - show sort controls
+            sortControls.classList.remove('no-display');
+        }
+    }
+    
+    // Show/hide search controls based on task count AND search state
+    if (searchControls) {
+        if (currentSearchTerm === "" && tasks.length === 0) {
+            // Not searching and no tasks - hide search controls
+            searchControls.classList.add('no-display');
+        } else {
+            // Either searching or has tasks - show search controls
+            searchControls.classList.remove('no-display');
+        }
+    }
+
+     let filteredTasks = tasks.filter(task => {
+
+    // STATUS FILTER
+    if (statusFilter === "completed" && !task.completed) return false;
+    if (statusFilter === "pending" && task.completed) return false;
+
+    // DATE FILTER
+    if (dateFilter !== "all") {
+        const now = new Date();
+        const deadline = new Date(task.deadline);
+
+        if (dateFilter === "today") {
+            if (
+                deadline.getDate() !== now.getDate() ||
+                deadline.getMonth() !== now.getMonth() ||
+                deadline.getFullYear() !== now.getFullYear()
+            ) return false;
+        }
+
+        if (dateFilter === "week") {
+            const diff = (deadline - now) / (1000 * 60 * 60 * 24);
+            if (diff < 0 || diff > 7) return false;
+        }
+    }
+
+    return true;
+});
+    
+    if (filteredTasks.length === 0) {
+        let message = '';
+        if (currentSearchTerm) {
+            // Search state with no results
+            message = `
+                <div style="text-align:center; color:#666; margin-top:30px; padding:20px; background:#f9f9f9; border-radius:8px;">
+                    <p style="font-size:16px; margin-bottom:10px;">
+                        No tasks match your search "<strong>${currentSearchTerm}</strong>".
+                    </p>
+                    <p style="color:#777; font-size:14px; margin-bottom:15px;">
+                        Try a different search term or clear the search to see all tasks.
+                    </p>
+                    <button onclick="clearSearch()" style="padding:8px 20px; background:#e67e22; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold; transition:all 0.2s;">
+                        Clear Search & Show All Tasks
+                    </button>
+                </div>
+            `;
+        } else {
+            // Normal empty state (not searching)
+            message = '<p style="text-align:center; color:#5A3D00; margin-top:20px;">No tasks found. Create your first task!</p>';
+        }
+        taskList.innerHTML = `<div class="empty-state">${message}</div>`;
+        return;
+    }
+
+
+   
+    
+    filteredTasks.forEach(task => {
+        const taskElement = document.createElement('div');
+        taskElement.className = `task-item ${task.completed ? 'completed-task' : ''}`;
+        
+        const descHtml = task.description ? `<div class="task-details">${task.description}</div>` : '';
+        const authorHtml = task.author ? `<div class="task-author">By: ${task.author}</div>` : '';
+        const completionControlHtml = `
+            <label style="display:flex; align-items:center; gap:6px; margin-top:8px; font-size:12px; color:#555;">
+                <input
+                class="completion-checkbox"
+                    type="checkbox"
+                    ${task.completed ? 'checked' : ''}
+                    onchange="toggleTaskCompletion(${task.id}, this.checked)"
+                >
+                Completed
+            </label>
+        `;
+
+        taskElement.innerHTML = `
+          
+
+        <!-- SELECTION CHECKBOX -->
+       <input 
+    type="checkbox"
+    class="select-checkbox"
+    data-id="${task.id}"
+    ${selectedTaskIds.has(task.id) ? "checked" : ""}
+    onchange="handleSelectionClick(event)"
+>
+           <div class="task-content">
+    <strong>${task.name}</strong>
+    ${descHtml}
+    ${authorHtml}
+    ${completionControlHtml}
+</div>
+
+<div class="task-footer">
+    <span class="deadline">⏰ ${task.deadline}</span>
+
+    <div class="task-actions">
+        <span onclick="openEditModal(${task.id})">✏️</span>
+        <span class="close-x" onclick="deleteTask(${task.id})">&times;</span>
+    </div>
+
+        `;
+        taskList.appendChild(taskElement);
+    });
+}
+
+async function saveTask() {
+    const taskName = document.getElementById('task-input').value.trim();
+    const rawDeadline = document.getElementById('deadline-input').value;
+    const desc = document.getElementById('description-input').value.trim();
+    const errorElement = document.getElementById('error-message');
+
+    // 1. 
+    errorElement.innerText = "";
+    errorElement.style.display = "none";
+
+    // 2. check Title and Deadline
+    if (!taskName && !rawDeadline) {
+        errorElement.innerText = "Please fill in both Title and Deadline!";
+        errorElement.style.display = "block";
+        return;
+    } else if (!taskName) {
+        errorElement.innerText = "Please fill in the Title!";
+        errorElement.style.display = "block";
+        return;
+    } else if (!rawDeadline) {
+        errorElement.innerText = "Please fill in the Deadline!";
+        errorElement.style.display = "block";
+        return;
+    }
+
+    // 3. format deadline for backend (add seconds and replace T with space)
+    const formattedDeadline = rawDeadline.replace('T', ' ') + ':00';
+
+    try {
+        let response;
+        const taskData = {
+            name: taskName,
+            deadline: formattedDeadline,
+            description: desc
+        };
+
+        if (editingTaskId) {
+            // UPDATE
+            response = await fetch(`/api/tasks/${editingTaskId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(taskData)
+            });
+        } else {
+            // CREATE
+            response = await fetch('/api/tasks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(taskData)
+            });
+        }
+
+        if (response.ok) {
+            closeModal();
+            editingTaskId = null;
+            await loadTasks();
+        } else {
+            const err = await response.json();
+            errorElement.innerText = err.error || "Failed to save task";
+            errorElement.style.display = "block";
+        }
+
+    } catch (e) {
+        console.error("Save error:", e);
+        alert("Server error");
+    }
+}
+async function deleteTask(taskId) {
+    if (!confirm('Delete this task?')) return;
+    try {
+        const response = await fetch(`/api/tasks/${taskId}`, { method: 'DELETE' });
+        if (response.ok) {
+            await loadTasks();  // Use unified load function to maintain search state
+        }
+    } catch (e) { console.error(e); }
+}
+
+function handleSelectionClick(event) {
+    const checkbox = event.target;
+    const taskId = parseInt(checkbox.dataset.id);
+
+    if (!selectionMode) {
+        selectionMode = true;
+        document.body.classList.add("selection-mode");
+        document.getElementById("bulk-bar").classList.add("active");
+    }
+
+    if (checkbox.checked) {
+        selectedTaskIds.add(taskId);
+    } else {
+        selectedTaskIds.delete(taskId);
+    }
+
+    updateSelectionCount();
+}
+function updateSelectionCount() {
+    const selected = selectedTaskIds.size;
+
+    document.getElementById("selected-count").innerText =
+        selected === 1 ? "1 task selected" : `${selected} tasks selected`;
+
+    if (selected === 0) {
+        exitSelectionMode();
+    }
+}
+
+function exitSelectionMode() {
+    selectionMode = false;
+    selectedTaskIds.clear();
+
+    document.body.classList.remove("selection-mode");
+    document.getElementById("bulk-bar").classList.remove("active");
+
+    document.querySelectorAll(".select-checkbox").forEach(cb => {
+        cb.checked = false;
+    });
+}
+
+async function toggleTaskCompletion(taskId, completed) {
+    try {
+        const response = await fetch(`/api/tasks/${taskId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ completed })
+        });
+        if (response.ok) {
+            await loadTasks();  // Use unified load function to maintain search state
+        } else {
+            const errorData = await response.json().catch(() => ({}));
+            alert("Error: " + (errorData.error || "Failed to update task"));
+        }
+    } catch (e) { console.error(e); }
+}
+
+
+function openEditModal(taskId) {
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    editingTaskId = taskId;
+
+    document.getElementById('task-input').value = task.name;
+    document.getElementById('deadline-input').value = formatForInput(task.deadline);
+    document.getElementById('description-input').value = task.description || '';
+
+    document.getElementById('error-message').style.display = 'none';
+
+    document.querySelector('.modal-card h2').innerText = "Edit Task";
+    document.querySelector('.save-btn').innerText = "Update Task";
+
+    openModal();
+}
+
+function formatForInput(deadline) {
+    // convert "YYYY-MM-DD HH:MM:SS" → "YYYY-MM-DDTHH:MM"
+    return deadline.replace(' ', 'T').slice(0, 16);
+}
+
+function openModal() { document.getElementById('modal-overlay').classList.remove('hidden'); }
+function closeModal() {
+    document.getElementById('modal-overlay').classList.add('hidden');
+
+    document.getElementById('task-input').value = '';
+    document.getElementById('deadline-input').value = '';
+    document.getElementById('description-input').value = '';
+
+    editingTaskId = null;
+
+    document.querySelector('.modal-card h2').innerText = "New Task";
+    document.querySelector('.save-btn').innerText = "Save Task";
+}
+function closeModalOutside(event) { 
+    if (event.target.id === 'modal-overlay') closeModal(); 
+}
+
+document.getElementById("delete-selected-btn").addEventListener("click", async () => {
+    const selectedIds = Array.from(selectedTaskIds);
+
+    if (selectedIds.length === 0) {
+        alert("Select tasks first");
+        return;
+    }
+
+    if (!confirm("Delete selected tasks?")) return;
+
+    try {
+        const res = await fetch("/api/tasks/bulk-delete", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ task_ids: selectedIds })
+        });
+
+        if (res.ok) {
+            await loadTasks();  // Use unified load function to maintain search state
+            exitSelectionMode();
+        } else {
+            alert("Delete failed");
+        }
+    } catch (e) {
+        console.error(e);
+    }
+});
+
+async function toggleSortOrder() {
+    // Toggle sort order
+    currentSortOrder = currentSortOrder === "asc" ? "desc" : "asc";
+    
+    // Update button text
+    const btn = document.getElementById("sort-toggle");
+    btn.textContent = currentSortOrder === "asc" 
+        ? "⏰ Sort: Soonest First" 
+        : "⏰ Sort: Latest First";
+    
+    // Reload tasks with new sort order
+    await loadTasksWithSort(currentSortOrder);
+}
+
+function setStatusFilter(filter) {
+    statusFilter = filter;
+    updateActiveButtons();
+    renderTaskList();
+}
+
+function setDateFilter(filter) {
+    dateFilter = filter;
+    updateActiveButtons();
+    renderTaskList();
+}
+
+function updateActiveButtons() {
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        if (btn.textContent.toLowerCase().includes(statusFilter)) {
+            btn.classList.add('active');
+        }
+
+        if (
+            (dateFilter === "today" && btn.textContent.includes("Today")) ||
+            (dateFilter === "week" && btn.textContent.includes("Week")) ||
+            (dateFilter === "all" && btn.textContent.includes("All Dates"))
+        ) {
+            btn.classList.add('active');
+        }
+    });
+}
+
+function openDrawer() {
+    document.getElementById("filterDrawer").classList.add("open");
+    document.getElementById("drawerOverlay").classList.add("open");
+
+    // hide button
+    document.querySelector(".filter-toggle").style.opacity = "0";
+    document.querySelector(".filter-toggle").style.pointerEvents = "none";
+}
+
+function closeDrawer() {
+    document.getElementById("filterDrawer").classList.remove("open");
+    document.getElementById("drawerOverlay").classList.remove("open");
+
+    // show button again
+    document.querySelector(".filter-toggle").style.opacity = "1";
+    document.querySelector(".filter-toggle").style.pointerEvents = "all";
+}
+
+function updateFilterCount() {
+    let count = 0;
+
+    if (statusFilter !== "all") count++;
+    if (dateFilter !== "all") count++;
+
+    const el = document.getElementById("filter-count");
+
+    if (!el) return;
+
+     if (count > 0) {
+        el.textContent = `• ${count}`;
+        el.classList.add("active");   // add padding
+    } else {
+        el.textContent = "";
+        el.classList.remove("active"); // remove padding
+    }
+}
+
+// Apply filters when user selects
+document.querySelectorAll('input[name="status"]').forEach(input => {
+    input.addEventListener("change", e => {
+        statusFilter = e.target.value;
+        updateFilterCount();
+        renderTaskList();
+    });
+});
+
+document.querySelectorAll('input[name="date"]').forEach(input => {
+    input.addEventListener("change", e => {
+        dateFilter = e.target.value;
+        updateFilterCount();
+        renderTaskList();
+    });
+});
+
+// Close when clicking outside
+document.addEventListener("click", (e) => {
+    const panel = document.getElementById("filterPanel");
+    const button = document.querySelector(".filter-toggle");
+
+    if (!panel || !button) return;
+
+    if (!panel.contains(e.target) && !button.contains(e.target)) {
+        panel.classList.remove("open");
+    }
+});
+
+
+const scrollBtn = document.getElementById("scrollTopBtn");
+
+if (scrollBtn) {
+    window.addEventListener("scroll", () => {
+        if (window.scrollY > 200) {
+            scrollBtn.classList.add("show");
+        } else {
+            scrollBtn.classList.remove("show");
+        }
+    });
+
+    scrollBtn.addEventListener("click", () => {
+        window.scrollTo({
+            top: 0,
+            behavior: "smooth"
+        });
+    });
+}
+</script>
+{% endblock %}

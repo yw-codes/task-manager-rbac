@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block body_class %}about-page{% endblock %}
+
+{% block title %}About - Task Tracker{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
+{% endblock %}
+
+{% block content %}
+
+
+<div class="about-modal">
+
+    <div class="bush bush-left">
+        <div class="leaf"></div>
+        <div class="leaf"></div>
+        <div class="leaf"></div>
+
+        <div class="leaf-particle">🍃</div>
+        <div class="leaf-particle">🍃</div>
+    </div>
+
+    <div class="bunny-pop bunny-left">🐰</div>
+
+    <div class="bush bush-right">
+        <div class="leaf"></div>
+        <div class="leaf"></div>
+        <div class="leaf"></div>
+
+        <div class="leaf-particle">🍃</div>
+        <div class="leaf-particle">🍃</div>
+    </div>
+
+    <div class="bunny-pop bunny-right">🐰</div>
+
+    <div class="modal-content">
+        <h1>About Task Tracker</h1>
+
+      <p>
+    Task Tracker is a simple and intuitive web application designed to help users 
+    stay organized and manage their daily tasks efficiently. Whether it’s assignments, 
+    personal goals, or reminders, everything can be tracked in one place with ease.
+</p>
+
+<p>
+    Built with a playful bunny-themed interface, the app aims to make productivity 
+    feel less stressful and more engaging. Small interactive elements like animated 
+    bushes and a curious bunny bring life to the experience while keeping the 
+    functionality straightforward and easy to use.
+</p>
+
+<p>
+    This project was developed using Flask and focuses on core task management 
+    features such as adding, editing, and deleting tasks. The goal is to combine 
+    simplicity, usability, and a touch of creativity to make everyday task tracking 
+    more enjoyable.
+</p>
+
+        <a href="{{ url_for('routes.index') }}" class="back-button">Back Home</a>
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,230 @@
+* {
+    box-sizing: border-box; /* This makes padding stay INSIDE the height calculation */
+}
+
+
+
+/* Target the whole page */
+
+/* --- ANIMATED BACKGROUND GRADIENT --- */
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+
+    background: linear-gradient(
+        135deg,
+        #ffff00 0%,
+        #f1c40f 30%,
+        #f39c12 60%,
+        #ffff00 100%
+    );
+
+    background-size: 400% 400%;
+    animation: gradientMove 22s ease-in-out infinite;
+
+    /* performance hint */
+    will-change: background-position;
+}
+@keyframes gradientMove {
+    0% {
+        background-position: 0% 0%;
+    }
+    50% {
+        background-position: 100% 100%;
+    }
+    100% {
+        background-position: 0% 0%;
+    }
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(
+        circle at 20% 20%,
+        rgba(255,255,255,0.25),
+        transparent 60%
+    );
+    pointer-events: none;
+}
+
+
+
+h1,
+.sub-heading {
+    font-family: 'Changa', sans-serif;
+}
+
+.app-wrapper {
+    max-width: 1440px;    /* Prevents the app from getting too wide on desktop */
+    margin: 0 auto;       /* The 'auto' magic that centers the whole app */
+    padding: 0 20px;      /* Prevents content from touching the screen edges on mobile */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;    /* Ensures the container is at least as tall as the screen */
+}
+
+
+
+/* --- HEADER NAVIGATION --- */
+#nav {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin: 20px auto;
+
+    padding: 10px 15px;
+    border-radius: 14px;
+
+    /* soft glass effect matching yellow theme */
+    background: rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(10px);
+
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    width: fit-content;
+
+      position: relative;
+    z-index: 1000;
+}
+
+/* --- NAV ITEM (ADD THIS) --- */
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: #5a3d00;
+
+    background: rgba(255, 255, 255, 0.6);
+    overflow: hidden;
+
+    transition: all 0.25s ease, padding 0.35s ease;
+}
+
+/* ICON */
+.nav-item .icon {
+    font-size: 18px;
+}
+
+/* TEXT HIDDEN */
+.nav-item .text {
+    opacity: 0;
+    max-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+
+    transform: translateX(-6px);
+    transition: all 0.35s ease;
+}
+
+/* SHOW ON HOVER */
+.nav-item:hover .text {
+    opacity: 1;
+    max-width: 100px;
+    transform: translateX(0);
+}
+
+.nav-item svg {
+    width: 20px;
+    height: 20px;
+}
+
+#footer {
+    margin-top: auto;
+    padding: 14px 0;
+    text-align: center;
+
+    border-radius: 12px 12px 0 0;
+
+    font-size: large;
+    font-weight: 600;
+
+    /* DEFAULT GLASS */
+    background: rgba(255,255,255,0.3);
+    backdrop-filter: blur(10px);
+}
+
+/* HOME (lighter bg → stronger glass) */
+body.home-page #footer {
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(8px);
+}
+
+#footer-text::after {
+    content: "|";
+    margin-left: 4px;
+    animation: blink 0.8s infinite;
+}
+
+@keyframes blink {
+    50% { opacity: 0; }
+}
+
+
+
+/* Style your links/buttons */
+
+#nav a {
+    text-decoration: none;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-weight: 600;
+    color: #5a3d00;
+
+    background: rgba(255, 255, 255, 0.6);
+    transition: all 0.25s ease;
+}
+
+/* Hover state */
+#nav a:hover {
+    background: linear-gradient(135deg, #e67e22, #d35400);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(211, 84, 0, 0.25);
+}
+
+
+/* FORCE NAV ANIMATION (override about.css) */
+#nav .nav-item .text {
+    opacity: 0 !important;
+    max-width: 0 !important;
+    transform: translateX(-6px) !important;
+}
+
+#nav .nav-item:hover .text {
+    opacity: 1 !important;
+    max-width: 100px !important;
+    transform: translateX(0) !important;
+}
+
+.global-logo {
+    position: absolute;   /* always top-left of screen */
+    top: 5%;
+    left: 8%;
+
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+
+    font-weight: 700;
+    font-size: x-large;
+
+    text-decoration: none;
+    color: #5a3d00;
+
+    z-index: 2000; /* above everything */
+}
+
+.global-logo span {
+    font-family: 'Passion One', sans-serif;
+}
+
+/* hover effect */
+.global-logo:hover {
+    transform: translateY(-2px);
+}

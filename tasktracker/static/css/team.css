@@ -1,0 +1,216 @@
+body.team-page {
+    font-family: 'Segoe UI', sans-serif;
+
+    background: linear-gradient(
+        135deg,
+        #6dd5fa,
+        #2980b9,
+        #1e3c72,
+        #6dd5fa
+    );
+
+    background-size: 400% 400%;
+    animation: gradientMove 18s ease infinite;
+}
+
+.team-heading {
+display: flex;
+flex-direction: column;
+text-align: center;
+}
+
+
+.team-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* force 3 per row */
+    gap: 30px; /* spacing between cards */
+    margin-block: 30px;
+    justify-items: center;
+}
+
+.team-card {
+    width: 220px;
+    height: 220px;
+
+    opacity: 0;
+    transform: scale(0.7);
+
+    perspective: 1000px;
+
+    animation: hopStack 0.6s ease forwards;
+    
+}
+
+/* subtle tilt effect */
+.team-card:hover .card-inner {
+    transform: rotateY(180deg) translateZ(0);
+}
+
+.team-card:hover .card-back img {
+    opacity: 1;
+    transform: scale(1);
+}
+
+
+.team-card:hover .card-front,
+.team-card:hover .card-back {
+    box-shadow:
+        0 12px 30px rgba(0,0,0,0.25),
+        0 0 15px rgba(100, 180, 255, 0.6);
+        opacity: 1;
+}
+
+.carrot {
+    font-size: 32px;
+    margin-bottom: 10px;
+
+    transition: transform 0.3s ease;
+}
+
+.team-card:hover .carrot {
+    transform: translateY(-6px) rotate(-6deg);
+}
+
+.team-card:nth-child(n) {
+    animation-delay: calc((var(--index, 0)) * 0.1s);
+}
+
+
+
+.card-inner {
+    position: relative;
+    width: 100%;
+    height: 220px;
+
+    transform-style: preserve-3d;
+
+    transition: transform 0.6s cubic-bezier(0.25, 1, 0.3, 1);
+
+    transform-origin: center center; /* ✅ IMPORTANT */
+    will-change: transform;
+}
+
+/* FRONT & BACK */
+.card-front, .card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+
+    backface-visibility: hidden;
+
+    border-radius: 16px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    /* UPDATED GLASS */
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
+    border: 1px solid rgba(255,255,255,0.4);
+
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    inset: 0;
+    transform-style:preserve-3d ;
+}
+
+/* BACK SIDE */
+.card-back {
+    transform: rotateY(180deg);
+    gap: 10px;
+}
+
+.card-back img{
+    opacity: 0;
+    transform: scale(0.9);
+    transition: 0.3s ease;
+}
+
+
+
+
+
+
+
+.card-front::before,
+.card-back::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+
+    background: linear-gradient(
+        120deg,
+        transparent,
+        rgba(255,255,255,0.4),
+        transparent
+    );
+
+    opacity: 0;
+    transition: 0.4s;
+}
+
+
+
+
+.card-front h3 {
+    margin-top: 5px;
+    font-weight: 600;
+    color: #1e3c72;
+}
+
+.card-front {
+    position: relative;
+}
+
+
+.card-back p {
+    font-weight: 500;
+    color: #1e3c72;
+    opacity: 0.9;
+    font-size: 14px;
+}
+
+.profile-img {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    object-fit: cover;
+
+    margin-bottom: 10px;
+
+    border: 2px solid rgba(255,255,255,0.6);
+}
+
+
+
+
+@keyframes hopStack {
+    0% {
+        opacity: 0;
+        transform: scale(0.6);
+    }
+
+    40% {
+        opacity: 1;
+        transform: scale(1.08); /* slight pop */
+    }
+
+    70% {
+        transform: scale(0.96); /* soft settle */
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+
+
+
+
+
+
